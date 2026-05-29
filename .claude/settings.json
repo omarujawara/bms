@@ -1,0 +1,11 @@
+{
+  "enabledMcpjsonServers": [
+    "supabase"
+  ],
+  "enableAllProjectMcpServers": false,
+  "permissions": {
+    "deny": [
+      "Read(.env.local)"
+    ]
+  }
+}
