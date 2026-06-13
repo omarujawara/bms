@@ -43,25 +43,59 @@ This project uses **Next.js 16.2.6** with React 19. This version has breaking ch
 ```
 bms-app/
 ├── app/
-│   ├── (auth)/             # unauthenticated routes (login, etc.)
-│   ├── (app)/              # authenticated routes — all protected pages live here
+│   ├── (auth)/                     # unauthenticated routes (login, forgot-password)
+│   │   ├── layout.tsx
+│   │   └── login/
+│   ├── (app)/                      # authenticated shell — proxy.ts protects this group
+│   │   ├── layout.tsx              # app shell: sidebar, nav, user context
+│   │   ├── dashboard/
+│   │   ├── inventory/
+│   │   ├── sales/
+│   │   ├── returns/
+│   │   ├── orders/
+│   │   ├── rentals/
+│   │   ├── assembly/
+│   │   └── (owner)/                # owner-only nested group — layout enforces role
+│   │       ├── layout.tsx          # redirects sales_rep to /dashboard
+│   │       ├── purchasing/
+│   │       ├── expenses/
+│   │       ├── payroll/
+│   │       ├── staff/
+│   │       └── reports/
+│   ├── api/                        # route handlers (QR lookup, auth callback, etc.)
+│   ├── favicon.ico
+│   ├── globals.css
 │   └── layout.tsx
-├── features/               # feature modules (see Feature Structure below)
+├── features/                       # one folder per business domain
 │   ├── auth/
 │   ├── inventory/
-│   └── reports/
+│   ├── purchasing/
+│   ├── sales/
+│   ├── returns/
+│   ├── customer-orders/
+│   ├── rentals/
+│   ├── assembly/
+│   ├── operations/
+│   ├── payroll/
+│   └── staff/
 ├── components/
-│   └── ui/                 # shadcn/ui components — generated, edit sparingly
+│   ├── ui/                         # shadcn/ui components — generated, edit sparingly
+│   ├── layout/                     # app shell components (Sidebar, TopNav, etc.)
+│   └── shared/                     # reusable non-shadcn components (DataTable, PageHeader, etc.)
+├── hooks/                          # shared client-side hooks used by 2+ features
+├── types/                          # shared TypeScript types not owned by any feature
 ├── lib/
-│   ├── supabase/           # Supabase client factories (see Supabase Clients below)
-│   │   ├── client.ts
-│   │   ├── server.ts
-│   │   ├── admin.ts
-│   │   └── database.types.ts   # auto-generated — never edit by hand
-│   └── utils.ts            # cn() utility (clsx + tailwind-merge)
-├── supabase/               # Supabase CLI config and migrations
-├── proxy.ts            # session refresh on every request (auth protection not yet active)
-└── .claude/                # Claude Code config and skills
+│   └── supabase/                   # Supabase client factories (see Supabase Clients below)
+│       ├── client.ts
+│       ├── server.ts
+│       ├── admin.ts
+│       └── database.types.ts       # auto-generated — never edit by hand
+├── utils/                          # global pure utility functions (formatCurrency, etc.)
+├── supabase/                       # Supabase CLI config and migrations
+│   └── migrations/
+├── docs/                           # schema reference, ADRs, project structure
+├── proxy.ts                        # session refresh on every request (auth protection not yet active)
+└── .claude/                        # Claude Code config and skills
 ```
 
 ### Feature Structure
@@ -87,7 +121,7 @@ component → action → db/ → Supabase
 - `actions/` orchestrate logic and call `db/` functions
 - Components never import from `db/` directly
 
-New feature folders are created only when needed — do not pre-create empty features.
+All domain feature folders are pre-created at project init. Add files inside them as features are built.
 
 ---
 
@@ -138,15 +172,15 @@ SUPABASE_SERVICE_ROLE_KEY=      # server-only — never expose to client or comm
 
 ## Styling
 
-- **Tailwind CSS v4** with shadcn/ui (`style: base-mira`, `baseColor: mist`)
+- **Tailwind CSS v4** with shadcn/ui (`style: base-mira`, `baseColor: neutral`)
 - Theme tokens are CSS variables defined in `app/globals.css`
 - Add shadcn components via `npx shadcn add <component>` — never manually create files in `components/ui/`
-- Icons: `lucide-react` (primary), `@hugeicons/react` (secondary)
+- Icons: `lucide-react`
 
 ---
 
 ## TypeScript
 
-- Path alias: `@/*` maps to project root
+- Path aliases: `@/*` → project root, `@features/*` → `./features/*`, `@utils/*` → `./utils/*`
 - Strict mode is on — no `any` without justification
 - All Supabase clients must be typed with the `Database` generic from `lib/supabase/database.types.ts`
